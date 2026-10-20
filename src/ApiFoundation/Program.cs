@@ -1,4 +1,6 @@
 using ApiFoundation.Data;
+using ApiFoundation.Integracoes;
+using ApiFoundation.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ProcessadorArquivosProd>();
+builder.Services.AddScoped<IArmazenamentoArquivos, ArmazenamentoArquivos>();
+builder.Services.AddScoped<NotificadorLeomob>();
+builder.Services.AddScoped<ILeomobApiCliente>(sp => new LeomobApiCliente(
+    builder.Configuration.GetValue<double>("Leomob:TaxaFalha"),
+    sp.GetRequiredService<ILogger<LeomobApiCliente>>()));
+builder.Services.AddScoped<ConsultaPedidos>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
