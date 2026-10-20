@@ -127,3 +127,19 @@ No código original, na segunda notificação o pedido já existe, então o cód
 No código corrigido, isso fica resolvido pela checagem no início do método se o pedido já existe com status diferente de CRIADO, o pagamento já foi processado, então o método só registra no log e retorna, sem gravar nada, sem criar outro controle e sem chamar a Digibee ou o SVL. Quem chamou recebe sucesso e não reenvia.
 
 ## Parte 4 — SQL e modelagem
+
+### SQL 4.1
+select TipoPedido, Count(*) from Pedido where DataCriacao >= '2026-09-01' and DataCriacao < '2026-10-01' group by TipoPedido
+
+### SQL 4.2
+select * from Pedido p where p.Status = 'PAGO' and p.DataCriacao < NOW() - INTERVAL '2 hours' and not exists(
+select 1 from ControleNotificacao c where c.PedidoId = p.Id and c.Status = 'CONCLUIDO')
+
+### SQL 4.3
+select p.LojaId, Count(*) from ControleNotificacao c join Pedido p on p.Id = c.PedidoId where c.Status = 'FALHA' group by p.LojaId Order By count(*) Desc limit 5
+
+### Questão 4.4
+Sim é um problema pois o pedido pode ser executado duas vezes, a alteração mais simples é transformar a coluna PedidoSVL em unique, por que assim vai evitar que PedidosSVL com o mesmo valor seja salvo no banco, se caso a tabela já existir algum duplicado, precisa ser tratado antes de alterar a coluna para unique, se não, da erro
+
+### Questão 4.5
+Na tabela de Pedido criar os  indices composto de Status e DataCriacao e na tabela de ControleNotificacao criaria o indices composto do PedidoId e Status
